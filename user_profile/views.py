@@ -34,6 +34,11 @@ def deposit(request, pk, amount):
         return JsonResponse({'message': 'Invalid amount.'})
 
     user_profile = UserProfile.objects.get(user__pk=pk)
+
+    # forbidden for sellers
+    if user_profile.role == UserProfile.SELLER:
+        return JsonResponse({'message': 'Forbidden action for users of role seller.'})
+
     user_profile.deposit += amount
     user_profile.save()
 
