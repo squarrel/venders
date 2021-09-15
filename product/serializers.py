@@ -13,10 +13,18 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         seller_data = validated_data.pop('seller')
         user = User.objects.get(email=seller_data)
-        product, created = Product.objects.update_or_create(
+
+        product = Product.objects.create(
             seller=user,
             product_name=validated_data.pop('product_name'),
             amount_available=validated_data.pop('amount_available'),
             cost=validated_data.pop('cost'),
         )
         return product
+
+    def update(self, instance, validated_data):
+        seller_data = validated_data.get('seller')
+        user = User.objects.get(email=seller_data['email'])
+        validated_data['seller'] = user
+
+        return super().update(instance, validated_data)
