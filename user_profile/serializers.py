@@ -6,7 +6,7 @@ from user_profile.models import UserProfile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name']
+        fields = ['username', 'password', 'email', 'first_name', 'last_name']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -19,6 +19,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_data = validated_data.pop('user')
         user = UserSerializer.create(UserSerializer(), validated_data=user_data)
+        user.set_password(user.password)
+        user.save()
         user_profile = UserProfile.objects.create(
             user=user, role=validated_data.pop('role'), deposit=validated_data.pop('deposit')
         )
