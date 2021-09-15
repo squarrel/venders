@@ -23,3 +23,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             user=user, role=validated_data.pop('role'), deposit=validated_data.pop('deposit')
         )
         return user_profile
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.get('user')
+        user_serializer = UserSerializer(data=user_data)
+        if user_serializer.is_valid():
+            user = user_serializer.update(
+                instance=instance.user,
+                validated_data=user_serializer.validated_data
+            )
+            validated_data['user'] = user
+
+        return super().update(instance, validated_data)
