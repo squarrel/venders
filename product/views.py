@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import Http404
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -8,7 +8,9 @@ from product.models import Product
 from product.serializers import ProductSerializer
 
 
-class ProductRecordView(APIView):
+class ProductView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get_object(self, pk):
         try:
             return Product.objects.get(pk=pk)
