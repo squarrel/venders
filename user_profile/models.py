@@ -10,6 +10,8 @@ class UserProfile(models.Model):
         (SELLER, 'Seller'),
     ]
 
+    ALLOWED_COINS = [5, 10, 20, 50, 100]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=18, choices=ROLES, default=BUYER)
     deposit = models.IntegerField(default=0)
