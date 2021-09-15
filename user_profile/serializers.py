@@ -19,7 +19,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_data = validated_data.pop('user')
         user = UserSerializer.create(UserSerializer(), validated_data=user_data)
-        user_profile, created = UserProfile.objects.update_or_create(
+        user_profile = UserProfile.objects.create(
             user=user, role=validated_data.pop('role'), deposit=validated_data.pop('deposit')
         )
         return user_profile
