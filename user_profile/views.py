@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from user_profile.decorators import only_buyers
 from user_profile.models import UserProfile
 from user_profile.serializers import UserProfileSerializer
 
@@ -47,18 +48,33 @@ class UserProfileView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@csrf_exempt
+#@csrf_exempt
+@only_buyers
 def deposit(request, pk, amount):
     if amount not in UserProfile.ALLOWED_COINS:
-        return JsonResponse({'message': 'Invalid amount.'})
+        return JsonResponse(
+            {'message': 'Invalid amount.'},
+            status=status.HTTP_406_NOT_ACCEPTABLE
+        )
 
     user_profile = UserProfile.objects.get(user__pk=pk)
-
-    # forbidden for sellers
-    if user_profile.role == UserProfile.SELLER:
-        return JsonResponse({'message': 'Forbidden action for users of role seller.'})
-
     user_profile.deposit += amount
     user_profile.save()
 
-    return JsonResponse({'message': 'Success'})
+    return JsonResponse(
+        {'message': 'Success'},
+        status=status.HTTP_202_ACCEPTED
+    )
+
+
+@csrf_exempt
+@only_buyers
+def buy(request, pk, amount):
+    product = Product.objects.get(pk=pk)
+    total_price = product.cost * amount
+    if not request.deposit >= total_price:
+        return JsonResponse(
+            {'message': 'Action failed. Insufficient user deposit.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
