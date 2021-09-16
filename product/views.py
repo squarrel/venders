@@ -5,17 +5,25 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from product.models import Product
+from product.permissions import IsOwnerOrReadOnly
 from product.serializers import ProductSerializer
 
 
 class ProductView(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly
+    ]
 
     def get_object(self, pk):
         try:
-            return Product.objects.get(pk=pk)
+            product = Product.objects.get(pk=pk)
         except Product.DoesNotExist:
             raise Http404
+
+        self.check_object_permissions(self.request, product)
+
+        return product
 
     def get(self, format=None):
         products = Product.objects.all()
