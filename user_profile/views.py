@@ -3,6 +3,7 @@ from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -48,16 +49,16 @@ class UserProfileView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-#@csrf_exempt
+@api_view()
 @only_buyers
-def deposit(request, pk, amount):
+def deposit(request, amount):
     if amount not in UserProfile.ALLOWED_COINS:
         return JsonResponse(
             {'message': 'Invalid amount.'},
             status=status.HTTP_406_NOT_ACCEPTABLE
         )
 
-    user_profile = UserProfile.objects.get(user__pk=pk)
+    user_profile = UserProfile.objects.get(user__pk=request.user.pk)
     user_profile.deposit += amount
     user_profile.save()
 
@@ -67,10 +68,10 @@ def deposit(request, pk, amount):
     )
 
 
-@csrf_exempt
+@api_view()
 @only_buyers
-def buy(request, pk, amount):
-    product = Product.objects.get(pk=pk)
+def buy(request, product_id, amount):
+    product = Product.objects.get(pk=product_id)
     total_price = product.cost * amount
     if not request.deposit >= total_price:
         return JsonResponse(
