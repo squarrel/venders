@@ -6,13 +6,17 @@ from user_profile.models import UserProfile
 
 def only_buyers(func):
     @wraps(func)
-    def func_wrapper(request, pk, amount, *args, **kwargs):
-        user_profile = UserProfile.objects.get(user__pk=pk)
-        if user_profile.role != UserProfile.BUYER:
+    def func_wrapper(request, *args, **kwargs):
+        try:
+            user_profile = UserProfile.objects.get(
+                user__pk=request.user.pk,
+                role=UserProfile.BUYER
+            )
+        except UserProfile.DoesNotExist:
             return JsonResponse(
                 {'message': 'This action is allowed only to users with a buyer role.'},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_401_UNAUTHORIZED
             )
-        return func(request, pk, amount, *args, **kwargs)
+        return func(request, *args, **kwargs)
 
     return func_wrapper
