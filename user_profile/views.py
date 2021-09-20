@@ -73,7 +73,7 @@ def deposit(request, amount):
 @only_buyers
 def buy(request):
     data = request.data
-    user_profile = UserProfile(user=request.user)
+    user_profile = UserProfile.objects.get(user=request.user)
 
     total_price = 0
     bought_products = list()
