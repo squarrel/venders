@@ -107,3 +107,17 @@ def buy(request):
         {'message': 'Successful purchase.', 'data': resp_data},
         status=status.HTTP_202_ACCEPTED
     )
+
+
+@api_view()
+@only_buyers
+def reset(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    user_profile.deposit = 0
+    user_profile.save()
+
+    return JsonResponse(
+        {'message': 'Deposit reset.'},
+        status=status.HTTP_202_ACCEPTED
+    )
+

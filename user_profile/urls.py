@@ -7,4 +7,5 @@ urlpatterns = [
     path('<int:pk>/', views.UserProfileView.as_view()),
     path('deposit/<int:amount>/', views.deposit),
     path('buy/', views.buy),
+    path('reset/', views.reset),
 ]
