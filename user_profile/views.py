@@ -11,6 +11,7 @@ from product.models import Product
 from user_profile.decorators import only_buyers
 from user_profile.models import UserProfile
 from user_profile.serializers import UserProfileSerializer
+from user_profile.utils import count_change
 
 
 class UserProfileView(APIView):
@@ -90,11 +91,15 @@ def buy(request):
         )
 
     user_profile.deposit -= total_price
+
+    change, remainder = count_change(user_profile.deposit)
+    user_profile.deposit = remainder
+
     user_profile.save()
 
     resp_data = {
         'total_spent': total_price,
-        'change': user_profile.deposit,
+        'change': change,
         'products': bought_products
     }
 
