@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from product.models import Product
 from user_profile.decorators import only_buyers
 from user_profile.models import UserProfile
 from user_profile.serializers import UserProfileSerializer
@@ -70,12 +71,34 @@ def deposit(request, amount):
 
 @api_view()
 @only_buyers
-def buy(request, product_id, amount):
-    product = Product.objects.get(pk=product_id)
-    total_price = product.cost * amount
-    if not request.deposit >= total_price:
+def buy(request):
+    data = request.data
+    user_profile = UserProfile(user=request.user)
+
+    total_price = 0
+    bought_products = list()
+
+    for pk, amount in data.items():
+        product = Product.objects.get(pk=pk)
+        total_price += product.cost * amount
+        bought_products.append(product.product_name)
+
+    if not user_profile.deposit >= total_price:
         return JsonResponse(
             {'message': 'Action failed. Insufficient user deposit.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    user_profile.deposit -= total_price
+    user_profile.save()
+
+    resp_data = {
+        'total_spent': total_price,
+        'change': user_profile.deposit,
+        'products': bought_products
+    }
+
+    return JsonResponse(
+        {'message': 'Successful purchase.', 'data': resp_data},
+        status=status.HTTP_202_ACCEPTED
+    )
