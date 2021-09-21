@@ -3,15 +3,16 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from product.models import Product
 from user_profile.models import UserProfile
 
 
 class TestViews(APITestCase):
     def setUp(self):
-        user = User.objects.create(username='ringo')
+        user = self.user = User.objects.create(username='ringo')
         user.set_password('password123')
         user.save()
-        user_profile = UserProfile.objects.create(
+        user_profile = self.user_profile = UserProfile.objects.create(
             user=user,
             role=UserProfile.BUYER,
             deposit=0
@@ -54,3 +55,27 @@ class TestViews(APITestCase):
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_buy__success(self):
+        p1 = Product.objects.create(
+            product_name='Cake',
+            seller=self.user,
+            amount_available=8,
+            cost=220
+        )
+        p2 = Product.objects.create(
+            product_name='Pie',
+            seller=self.user,
+            amount_available=6,
+            cost=50
+        )
+        self.user_profile.deposit = 500
+        self.user_profile.save()
+        self.client.login(username='ringo', password='password123')
+        data = {'1': 1, '2': 2}
+        response = self.client.post(
+            reverse('buy'),
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
