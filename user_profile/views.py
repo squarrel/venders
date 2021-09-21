@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -72,6 +73,7 @@ def deposit(request, amount):
 
 @api_view(['POST'])
 @only_buyers
+@transaction.atomic
 def buy(request):
     data = request.data
     user_profile = UserProfile.objects.get(user=request.user)
@@ -82,6 +84,7 @@ def buy(request):
     try:
         for pk, amount in data.items():
             product = Product.objects.get(pk=pk)
+            product.amount_available -= amount
             total_price += product.cost * amount
             bought_products.append(product.product_name)
     except Product.DoesNotExist:
