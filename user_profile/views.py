@@ -51,7 +51,7 @@ class UserProfileView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view()
+@api_view(['GET'])
 @only_buyers
 def deposit(request, amount):
     if amount not in UserProfile.ALLOWED_COINS:
