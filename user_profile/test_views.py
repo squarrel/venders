@@ -16,6 +16,14 @@ class TestViews(APITestCase):
             deposit=0
         )
 
+        user_seller = User.objects.create(username='john')
+        user_seller.set_password('password123')
+        user_seller.save()
+        user_profile = UserProfile.objects.create(
+            user=user_seller,
+            role=UserProfile.SELLER
+        )
+
     def test_deposit__anonymous_user(self):
         response = self.client.get(reverse('deposit', kwargs={'amount': 100}))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -30,4 +38,10 @@ class TestViews(APITestCase):
         self.client.login(username='ringo', password='password123')
         response = self.client.get(reverse('deposit', kwargs={'amount': 103}))
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_deposit__forbidden_for_seller(self):
+        self.client.login(username='john', password='password123')
+        response = self.client.get(reverse('deposit', kwargs={'amount': 100}))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
