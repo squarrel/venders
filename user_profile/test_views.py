@@ -79,3 +79,27 @@ class TestViews(APITestCase):
             content_type='application/json'
         )
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_buy__insufficient_funds(self):
+        p1 = Product.objects.create(
+            product_name='Cake',
+            seller=self.user,
+            amount_available=8,
+            cost=220
+        )
+        p2 = Product.objects.create(
+            product_name='Pie',
+            seller=self.user,
+            amount_available=6,
+            cost=50
+        )
+        self.user_profile.deposit = 10
+        self.user_profile.save()
+        self.client.login(username='ringo', password='password123')
+        data = {'1': 1, '2': 2}
+        response = self.client.post(
+            reverse('buy'),
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
