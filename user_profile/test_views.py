@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
@@ -44,4 +45,12 @@ class TestViews(APITestCase):
         response = self.client.get(reverse('deposit', kwargs={'amount': 100}))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-
+    def test_buy__product_does_not_exist(self):
+        self.client.login(username='ringo', password='password123')
+        data = {'1': 4, '2': 2}
+        response = self.client.post(
+            reverse('buy'),
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
