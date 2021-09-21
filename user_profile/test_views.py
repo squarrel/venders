@@ -25,3 +25,9 @@ class TestViews(APITestCase):
         self.client.login(username='ringo', password='password123')
         response = self.client.get(reverse('deposit', kwargs={'amount': 100}))
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_deposit__invalid_amount(self):
+        self.client.login(username='ringo', password='password123')
+        response = self.client.get(reverse('deposit', kwargs={'amount': 103}))
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
