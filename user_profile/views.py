@@ -70,7 +70,7 @@ def deposit(request, amount):
     )
 
 
-@api_view()
+@api_view(['POST'])
 @only_buyers
 def buy(request):
     data = request.data
@@ -79,10 +79,16 @@ def buy(request):
     total_price = 0
     bought_products = list()
 
-    for pk, amount in data.items():
-        product = Product.objects.get(pk=pk)
-        total_price += product.cost * amount
-        bought_products.append(product.product_name)
+    try:
+        for pk, amount in data.items():
+            product = Product.objects.get(pk=pk)
+            total_price += product.cost * amount
+            bought_products.append(product.product_name)
+    except Product.DoesNotExist:
+        return JsonResponse(
+            {'message': 'Product does not exist.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     if not user_profile.deposit >= total_price:
         return JsonResponse(
