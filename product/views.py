@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from product.models import Product
 from product.permissions import IsOwnerOrReadOnly
 from product.serializers import ProductSerializer
+from user_profile.models import UserProfile
 
 
 class ProductView(APIView):
@@ -33,8 +34,16 @@ class ProductView(APIView):
 
     def post(self, request):
         serializer = ProductSerializer(data=request.data)
+
         if serializer.is_valid(raise_exception=ValueError):
-            serializer.create(validated_data=request.data)
+            user_profile = UserProfile.objects.get(user=request.user)
+            if user_profile.role != UserProfile.SELLER:
+                return JsonResponse(
+                    {'message': 'Creating products only allowed to users with seller role.'},
+                    status=status.HTTP_406_NOT_ACCEPTABLE
+                )
+
+            serializer.create(validated_data=request.data, user=request.user)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
