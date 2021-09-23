@@ -3,17 +3,19 @@ from rest_framework import serializers
 from product.models import Product
 
 
+class UserRelatedField(serializers.RelatedField):
+    def to_representation(self, obj):
+        return {'email': obj}
+
+
 class ProductSerializer(serializers.ModelSerializer):
-    seller = serializers.CharField(source='seller.email')
+    seller = UserRelatedField(source='seller.email', read_only=True)
 
     class Meta:
         model = Product
         fields = ['product_name', 'seller', 'amount_available', 'cost']
 
-    def create(self, validated_data):
-        seller_data = validated_data.pop('seller')
-        user = User.objects.get(email=seller_data)
-
+    def create(self, validated_data, user):
         product = Product.objects.create(
             seller=user,
             product_name=validated_data.pop('product_name'),
@@ -21,10 +23,3 @@ class ProductSerializer(serializers.ModelSerializer):
             cost=validated_data.pop('cost'),
         )
         return product
-
-    def update(self, instance, validated_data):
-        seller_data = validated_data.get('seller')
-        user = User.objects.get(email=seller_data['email'])
-        validated_data['seller'] = user
-
-        return super().update(instance, validated_data)
